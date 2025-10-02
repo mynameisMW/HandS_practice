@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>학생 관리</h1>
+
+  <button onclick="getStudents()">모든 학생 조회</button>
+  <div id="result"></div>
+
+  <script>
+    async function getStudents() {
+      const response = await fetch("http://127.0.0.1:8000/students");
+      const data = await response.json();
+      document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
