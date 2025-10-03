@@ -1,0 +1,8 @@
+.link {
+  text-decoration: none !important;   /* 밑줄 강제 제거 */
+  color: inherit;                     /* 글자색 유지 */
+}
+.link:hover,
+.link:focus {
+  text-decoration: none !important;
+}
