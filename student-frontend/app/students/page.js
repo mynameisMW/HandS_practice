@@ -4,27 +4,22 @@ import Link from "next/link";
 
 const API_BASE = "http://127.0.0.1:8000";
 
-export default function StudentsPage() {
-    const [students, setStudents] = useState([]);
-    async function fetchStudents() {
-    const token = localStorage.getItem("token");
-    const res = await fetch("http://127.0.0.1:8000/students", {
-        headers: {
-        Authorization: `Bearer ${token}`,  // JWT 첨부
-        },
-    });
-  const data = await res.json();
-  console.log(data);
-}
-    useEffect(() => {
-        fetchStudents();
-    }, []);
+export default function Projects() {
+    const [project, setProject] = useState([]);
 
-    async function fetchStudents() {
-        const res = await fetch(`${API_BASE}/students`);
-        const data = await res.json();
-        setStudents(data);
-    }
+    const token = localStorage.getItem("token");
+    useEffect(() => {
+        async function verify(){
+            if (token) {
+                const res = await fetch(`${API_BASE}/verify?token=${token}`);
+                const data = await res.json();
+                if (data.role !== "admin") {
+                    alert("접근 권한이 없습니다.");
+                    window.location.href = "/";
+                }
+            }
+        }
+    }, []);
 
   // (a) useEffect로 fetch
     return( 

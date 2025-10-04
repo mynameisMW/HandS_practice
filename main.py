@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-from controller import items, users
 from SQLite_practice import _create_student, _get_student, _update_student, _delete_student
-from login import _create_user, _get_user, _get_all_users, _update_user, _delete_user, _login_user, verify_token
+from login import _create_user, _get_user, _get_all_users, _update_user, _delete_user, _login_user, verify_token, refresh_access_token
 from fastapi.middleware.cors import CORSMiddleware
+from posts import _post, _get_post, _get_all_posts, _update_post, _delete_post
 
 
 app = FastAPI()
@@ -21,9 +21,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(items.router)
-app.include_router(users.router)
 
 @app.get("/")
 def read_root():
@@ -74,3 +71,28 @@ def login(id: str, password: str):
 @app.get("/verify")
 def verify(token: str):
     return verify_token(token)
+
+@app.post("/refresh")
+def refresh(refresh_token: str):
+    return refresh_access_token(refresh_token)
+
+
+@app.post("/posts/add")
+def add_post(title: str, content: str, author_id: str):
+    return _post(title, content, author_id)
+
+@app.get("/posts/{post_id}")
+def read_post(post_id: int):
+    return _get_post(post_id)
+
+@app.get("/posts")
+def read_all_posts():
+    return _get_all_posts()
+
+@app.put("/posts/update/{post_id}")
+def update_post(post_id: int, title: str = None, content: str = None):
+    return _update_post(post_id, title, content)
+
+@app.delete("/posts/delete/{post_id}")
+def delete_post(post_id: int):
+    return _delete_post(post_id)

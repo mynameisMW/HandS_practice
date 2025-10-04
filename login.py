@@ -84,12 +84,20 @@ def _login_user(id, password):
     payload = {
         "username": username,
         "role": "admin" if id == "admin" else "user",
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
         }
+    refresh_payload = {
+        "username": username,
+        "type": "refresh",   # Refresh임을 구분
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
+    }
+
     print("payload", payload)
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    refresh_token = jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
     
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer", "refresh_token" : refresh_token}
+
 def verify_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -109,6 +117,31 @@ def verify_token(token: str):
     except jwt.InvalidTokenError:
         return "Invalid token"
 
+def refresh_access_token(refresh_token: str):
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "refresh":
+            return {"error": "Invalid token type"}
+        
+        username = payload.get("username")
+        # DB에서 사용자 정보를 다시 확인하여 role을 가져옵니다.
+        cursor.execute("SELECT id FROM users WHERE username=?", (username,))
+        user_row = cursor.fetchone()
+        if not user_row:
+            return {"error": "User not found"}
+        user_id = user_row[0]
+
+        new_access_payload = {
+            "username": username,
+            "role": "admin" if user_id == "admin" else "user",
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }
+        new_access_token = jwt.encode(new_access_payload, SECRET_KEY, algorithm=ALGORITHM)
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except jwt.ExpiredSignatureError:
+        return {"error": "Refresh token expired. Please log in again."}
+    except jwt.InvalidTokenError:
+        return {"error": "Invalid refresh token."}
 
 def cli():
     print(1)
