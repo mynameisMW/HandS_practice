@@ -59,4 +59,4 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/student-control:latest
             docker-compose down
             docker-compose up -d
- 
+
