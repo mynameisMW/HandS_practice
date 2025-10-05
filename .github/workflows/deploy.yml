@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]  # main 브랜치에 push될 때마다 실행
+    branches: [ main ]
 
 jobs:
   build_and_push:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Docker Compose 설치 (공식 저장소 등록 후)
+      # Docker Compose 설치
       - name: Install Docker Compose (official way)
         run: |
           sudo apt-get update
@@ -36,12 +36,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Docker 이미지 빌드 및 푸시
-      - name: Build and push image
+      # 🐍 백엔드 이미지 빌드 및 푸시
+      - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/student-control:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/student-control-backend:latest
+
+      # ⚛️ 프론트엔드 이미지 빌드 및 푸시
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/student-control-frontend:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -56,7 +67,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             cd /home/ubuntu/student-control
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/student-control:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/student-control-backend:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/student-control-frontend:latest
             docker-compose down
             docker-compose up -d
-
