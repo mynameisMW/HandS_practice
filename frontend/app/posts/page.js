@@ -27,7 +27,6 @@ export default function Posts() {
         verify();
         fetchPosts();
     }, []);
-    verify();
 
 
 
