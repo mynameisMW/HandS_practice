@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]  # main에 push될 때마다 실행
+    branches: [ main ]  # main 브랜치에 push될 때마다 실행
 
 jobs:
   build_and_push:
@@ -15,12 +15,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Docker Compose 설치 (공식 저장소 등록 후)
+      - name: Install Docker Compose (official way)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl gnupg lsb-release
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/ubuntu \
+            $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y docker-ce-cli docker-compose-plugin
+
+      # Docker Hub 로그인
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Docker 이미지 빌드 및 푸시
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
